@@ -1,0 +1,43 @@
+.output {
+  display: grid;
+  gap: 8px;
+}
+
+.snippet {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.snippet:hover {
+  border-color: var(--line-strong);
+}
+
+.snippetLabel {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.snippetValue {
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  margin: 0;
+  color: var(--faint);
+  font-size: 12px;
+}

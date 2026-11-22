@@ -1,47 +1,22 @@
-import { h, truncate, type Attrs, type Markup, type Weight } from "@/render";
+import { h, type Attrs, type Markup } from "@/render";
+import type { Glyph } from "../icons";
 
-export type TextOptions = {
-  readonly x: number;
-  readonly top: number;
-  readonly size: number;
-  readonly tone: "text" | "muted" | "faint" | "accent";
-  readonly weight?: Weight;
-  readonly width?: number;
-  readonly anchor?: "start" | "end";
-  readonly extra?: Attrs;
+const BASELINE_SHIFT = 0.35;
+
+export const baseline = (top: number, lineHeight: number, size: number): number => top + lineHeight / 2 + size * BASELINE_SHIFT;
+
+export const image = (href: string, x: number, y: number, width: number, height = width, extra?: Attrs): Markup =>
+  h("image", { href, x, y, width, height, preserveAspectRatio: "xMidYMid slice", ...extra });
+
+export const glyphWidth = (glyph: Glyph, height: number): number => {
+  const [, , w = 1, gh = 1] = glyph.viewBox.split(" ").map(Number);
+  return (w / gh) * height;
 };
 
-const BASELINE = 0.8;
-
-export const text = (value: string, { x, top, size, tone, weight = 400, width, anchor = "start", extra }: TextOptions): Markup =>
+export const glyph = (shape: Glyph, x: number, y: number, height: number, fill: string, title?: string): Markup =>
   h(
-    "text",
-    {
-      x,
-      y: top + size * BASELINE,
-      class: tone[0],
-      "font-size": size,
-      "font-weight": weight === 400 ? undefined : weight,
-      "text-anchor": anchor === "end" ? "end" : undefined,
-      ...extra,
-    },
-    width === undefined ? value : truncate(value, width, size, weight),
+    "svg",
+    { x, y, width: glyphWidth(shape, height), height, viewBox: shape.viewBox, fill },
+    title && h("title", {}, title),
+    h("path", { d: shape.path }),
   );
-
-export const image = (href: string, x: number, y: number, size: number, clip?: string, extra?: Attrs): Markup =>
-  h("image", {
-    href,
-    x,
-    y,
-    width: size,
-    height: size,
-    "clip-path": clip ? `url(#${clip})` : undefined,
-    preserveAspectRatio: "xMidYMid slice",
-    ...extra,
-  });
-
-export const roundedClip = (id: string, x: number, y: number, size: number, radius: number): Markup =>
-  h("clipPath", { id }, h("rect", { x, y, width: size, height: size, rx: radius }));
-
-export const circleClip = (id: string, cx: number, cy: number, r: number): Markup =>
-  h("clipPath", { id }, h("circle", { cx, cy, r }));

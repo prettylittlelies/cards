@@ -1,158 +1,81 @@
 import { inlineAll, inlineImage } from "@/api/inline";
-import { saturation } from "@/render/color";
-import { activityArt, avatarUrl, decorationUrl, emojiUrl, spotifyArtUrl } from "@/discord/cdn";
-import type { Activity, DiscordStatus, Presence, Profile } from "@/discord/types";
-import { FALLBACK_ACCENT, type DiscordCardConfig } from "./schema";
+import { activePlatforms, customStatusOf, detectKind, isVisibleActivity, type ActivityKind, type Platform } from "@/discord/activity";
+import { avatarUrl, decorationUrl } from "@/discord/cdn";
+import { nameplateOf } from "@/discord/nameplate";
+import type { DiscordStatus, Presence, Profile } from "@/discord/types";
+import type { DiscordCardConfig } from "./schema";
 
-export type Platform = "desktop" | "mobile" | "web";
-
-export type ActivityModel = {
-  readonly key: string;
-  readonly kind: "spotify" | "activity";
-  readonly heading: string;
-  readonly title: string;
-  readonly lines: readonly string[];
-  readonly art: string | null;
-  readonly badge: string | null;
-  readonly start: number | null;
-  readonly end: number | null;
-};
-
-export type CustomStatusModel = {
-  readonly emoji: string | null;
-  readonly image: string | null;
-  readonly text: string;
-};
+export type Summary =
+  | { readonly kind: "custom"; readonly emoji: string | null; readonly text: string }
+  | { readonly kind: "activity"; readonly activity: ActivityKind; readonly label: string; readonly extra: number };
 
 export type BadgeModel = {
   readonly label: string;
   readonly image: string;
 };
 
+export type NameplateModel = {
+  readonly label: string;
+  readonly color: number;
+  readonly image: string;
+};
+
 export type CardModel = {
   readonly name: string;
-  readonly username: string;
   readonly status: DiscordStatus;
   readonly platforms: readonly Platform[];
   readonly avatar: string | null;
   readonly decoration: string | null;
+  readonly nameplate: NameplateModel | null;
   readonly badges: readonly BadgeModel[];
-  readonly bio: string;
-  readonly pronouns: string;
-  readonly custom: CustomStatusModel | null;
-  readonly activities: readonly ActivityModel[];
+  readonly summary: Summary | null;
   readonly accent: number;
-  readonly now: number;
 };
 
-const MIN_SATURATION = 0.2;
-const CUSTOM_STATUS = 4;
+const NEUTRAL_ACCENT = 0x78788a;
 
-const HEADINGS: Readonly<Record<number, string>> = {
-  0: "Playing",
-  1: "Streaming",
-  2: "Listening to",
-  3: "Watching",
-  5: "Competing in",
+const AVATAR_SIZE = 64;
+const DECORATION_SIZE = 96;
+
+const summaryOf = (presence: Presence, config: DiscordCardConfig): Summary | null => {
+  const custom = config.show.customStatus ? customStatusOf(presence.activities) : undefined;
+  if (custom) return { kind: "custom", emoji: custom.emoji && !custom.emoji.id ? custom.emoji.name : null, text: custom.state ?? "" };
+  if (!config.show.activity) return null;
+  const visible = presence.activities.filter(isVisibleActivity);
+  const [primary] = visible;
+  return primary ? { kind: "activity", activity: detectKind(primary), label: primary.name, extra: visible.length - 1 } : null;
 };
 
-const platformsOf = (presence: Presence): Platform[] =>
-  (
-    [
-      ["desktop", presence.active_on_discord_desktop],
-      ["mobile", presence.active_on_discord_mobile],
-      ["web", presence.active_on_discord_web],
-    ] as const
-  )
-    .filter(([, active]) => active)
-    .map(([platform]) => platform);
-
-const spotifyOf = async (presence: Presence): Promise<ActivityModel | null> => {
-  const track = presence.spotify;
-  if (!presence.listening_to_spotify || !track) return null;
-  return {
-    key: `spotify:${track.track_id ?? track.song}`,
-    kind: "spotify",
-    heading: "Listening to Spotify",
-    title: track.song,
-    lines: [track.artist?.replaceAll(";", ",") ?? "", track.album ?? ""].filter(Boolean),
-    art: await inlineImage(track.album_art_url ? spotifyArtUrl(track.album_art_url) : null),
-    badge: null,
-    start: track.timestamps.start ?? null,
-    end: track.timestamps.end ?? null,
-  };
-};
-
-const activityOf = async (activity: Activity): Promise<ActivityModel> => {
-  const art = activityArt(activity, 128);
-  const images = await inlineAll({ large: art.large, small: art.small });
-  return {
-    key: activity.id,
-    kind: "activity",
-    heading: HEADINGS[activity.type] ?? "Playing",
-    title: activity.name,
-    lines: [activity.details, activity.state, activity.assets?.large_text].filter(
-      (line, index, all): line is string => Boolean(line) && line !== activity.name && all.indexOf(line) === index,
-    ),
-    art: images.large,
-    badge: images.large ? images.small : null,
-    start: activity.timestamps?.start ?? null,
-    end: activity.timestamps?.end ?? null,
-  };
-};
-
-const customOf = async (presence: Presence): Promise<CustomStatusModel | null> => {
-  const custom = presence.activities.find((activity) => activity.type === CUSTOM_STATUS);
-  if (!custom || (!custom.state && !custom.emoji)) return null;
-  const emoji = custom.emoji;
-  return {
-    emoji: emoji && !emoji.id ? emoji.name : null,
-    image: emoji?.id ? await inlineImage(emojiUrl(emoji.id, false)) : null,
-    text: custom.state ?? "",
-  };
-};
-
-const activitiesOf = async (presence: Presence, config: DiscordCardConfig): Promise<ActivityModel[]> => {
-  const rest = config.show.activities
-    ? presence.activities.filter((activity) => activity.type !== CUSTOM_STATUS && !activity.id.startsWith("spotify:"))
-    : [];
-  const models = await Promise.all([config.show.spotify ? spotifyOf(presence) : null, ...rest.map(activityOf)]);
-  return models.filter((model): model is ActivityModel => model !== null).slice(0, config.activities);
+const badgesOf = async (profile: Profile): Promise<BadgeModel[]> => {
+  const images = await Promise.all(profile.badges.map(({ icon }) => inlineImage(icon)));
+  return profile.badges.flatMap(({ label }, index) => {
+    const image = images[index];
+    return image ? [{ label, image }] : [];
+  });
 };
 
 export const buildModel = async (config: DiscordCardConfig, presence: Presence, profile: Profile): Promise<CardModel> => {
+  const { show, motion } = config;
   const user = presence.discord_user;
-  const animated = config.motion;
-  const [images, badges, custom, activities] = await Promise.all([
+  const plate = show.nameplate ? nameplateOf(user, motion.animatedNameplate) : null;
+  const [images, badges] = await Promise.all([
     inlineAll({
-      avatar: config.show.avatar ? avatarUrl(user, 128, animated.animatedAvatar) : null,
-      decoration: config.show.avatar && config.show.decoration ? decorationUrl(user, 160, animated.animatedDecoration) : null,
+      avatar: show.avatar ? avatarUrl(user, AVATAR_SIZE, motion.animatedAvatar) : null,
+      decoration: show.avatar && show.decoration ? decorationUrl(user, DECORATION_SIZE, motion.animatedDecoration) : null,
+      nameplate: plate?.url ?? null,
     }),
-    config.show.badges
-      ? Promise.all(
-          profile.badges.map(async ({ label, icon }): Promise<readonly BadgeModel[]> => {
-            const image = await inlineImage(icon);
-            return image ? [{ label, image }] : [];
-          }),
-        ).then((groups) => groups.flat())
-      : [],
-    config.show.customStatus ? customOf(presence) : null,
-    activitiesOf(presence, config),
+    show.badges ? badgesOf(profile) : [],
   ]);
 
   return {
     name: config.name || user.global_name || user.username,
-    username: user.username,
     status: presence.discord_status,
-    platforms: platformsOf(presence),
+    platforms: show.platforms ? activePlatforms(presence) : [],
     avatar: images.avatar,
     decoration: images.decoration,
+    nameplate: plate && images.nameplate ? { label: plate.label, color: plate.color, image: images.nameplate } : null,
     badges,
-    bio: config.tagline || profile.bio,
-    pronouns: profile.pronouns,
-    custom,
-    activities,
-    accent: config.accent ?? (profile.accent !== null && saturation(profile.accent) >= MIN_SATURATION ? profile.accent : FALLBACK_ACCENT),
-    now: Date.now(),
+    summary: summaryOf(presence, config),
+    accent: config.accent ?? plate?.color ?? profile.accent ?? NEUTRAL_ACCENT,
   };
 };

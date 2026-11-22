@@ -1,88 +1,76 @@
-import { createTheme, h, render, separated, stack, type Block, type Theme } from "@/render";
-import { METRICS, type Context } from "./context";
+import { FONT_WIDTH, fragment, h, hex, PALETTES, render, type Markup } from "@/render";
+import { ROW, type Context } from "./context";
 import type { CardModel } from "./model";
-import { FALLBACK_ACCENT, type DiscordCardConfig } from "./schema";
-import { activity, idle } from "./sections/activity";
-import { bio } from "./sections/bio";
-import { header } from "./sections/header";
+import type { DiscordCardConfig } from "./schema";
+import { avatar } from "./sections/avatar";
+import { nameLine, SUB_TOP } from "./sections/line";
+import { nameplate } from "./sections/nameplate";
+import { baseline } from "./sections/primitives";
+import { summary } from "./sections/summary";
 import { stylesheet } from "./style";
 
 const XMLNS = "http://www.w3.org/2000/svg";
+const SURFACE_FILL = 0.03;
+const SURFACE_RING = 0.08;
 
 type Frame = {
   readonly config: DiscordCardConfig;
-  readonly theme: Theme;
   readonly label: string;
-  readonly content: Block;
+  readonly body: Markup;
 };
 
-const frame = ({ config, theme, label, content }: Frame): string => {
-  const { width, padding, radius } = config;
-  const height = Math.ceil(content.height + padding * 2);
-  const inset = config.show.border ? 0.5 : 0;
+const frame = async ({ config, label, body }: Frame): Promise<string> => {
+  const palette = PALETTES[config.theme];
+  const { width, scale, radius } = config;
+  const fg = hex(palette.fg);
+  const shape = { width, height: ROW.height, rx: radius };
 
   return render(
     h(
       "svg",
-      { xmlns: XMLNS, width, height, viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": label },
+      { xmlns: XMLNS, width: width * scale, height: ROW.height * scale, viewBox: `0 0 ${width} ${ROW.height}`, role: "img", "aria-label": label },
       h("title", {}, label),
-      h("style", {}, stylesheet(theme, config)),
-      h(
-        "defs",
-        {},
-        h(
-          "radialGradient",
-          { id: "glow", cx: "0", cy: "0", r: "1", gradientUnits: "objectBoundingBox" },
-          h("stop", { offset: "0", "stop-color": theme.css.accent, "stop-opacity": 0.22 }),
-          h("stop", { offset: "1", "stop-color": theme.css.accent, "stop-opacity": 0 }),
-        ),
-      ),
+      h("style", {}, await stylesheet(palette, config)),
+      h("defs", {}, h("clipPath", { id: "row" }, h("rect", shape))),
       h(
         "g",
-        { class: "card" },
-        h("rect", {
-          x: inset,
-          y: inset,
-          width: width - inset * 2,
-          height: height - inset * 2,
-          rx: radius,
-          fill: theme.css.background,
-          stroke: config.show.border ? theme.css.border : undefined,
-        }),
-        config.show.glow && h("rect", { x: inset, y: inset, width: width - inset * 2, height: height - inset * 2, rx: radius, fill: "url(#glow)" }),
-        content.draw(padding),
+        { "clip-path": "url(#row)" },
+        config.show.surface &&
+          fragment(h("rect", { ...shape, fill: hex(palette.bg) }), h("rect", { ...shape, fill: fg, "fill-opacity": SURFACE_FILL })),
+        body,
       ),
+      config.show.surface &&
+        h("rect", {
+          x: 0.5,
+          y: 0.5,
+          width: width - 1,
+          height: ROW.height - 1,
+          rx: Math.max(0, radius - 0.5),
+          fill: "none",
+          stroke: fg,
+          "stroke-opacity": SURFACE_RING,
+        }),
     ),
   );
 };
 
-const divider = (ctx: Context) => (y: number) =>
-  h("rect", { x: ctx.x, y, width: ctx.width, height: 1, fill: ctx.theme.css.border, opacity: ctx.config.show.dividers ? 1 : 0 });
-
-export const renderCard = (config: DiscordCardConfig, model: CardModel): string => {
-  const theme = createTheme(config.theme, model.accent);
-  const ctx: Context = { config, model, theme, metrics: METRICS[config.layout], x: config.padding, width: config.width - config.padding * 2 };
-  const wantsActivity = config.show.activities || config.show.spotify;
-  const activities = model.activities.map((entry, index) => activity(ctx, entry, index));
-  const feed = wantsActivity ? stack(activities.length > 0 ? activities : [idle(ctx)], ctx.metrics.gap) : null;
-  const intro = stack([header(ctx), bio(ctx)], ctx.metrics.gap - 2);
-  const content = separated([intro, feed], ctx.metrics.gap, divider(ctx));
-  return frame({ config, theme, label: `${model.name} on Discord`, content });
+export const renderCard = (config: DiscordCardConfig, model: CardModel): Promise<string> => {
+  const ctx: Context = { config, model, palette: PALETTES[config.theme], fontWidth: FONT_WIDTH[config.font] };
+  return frame({
+    config,
+    label: `${model.name} on Discord`,
+    body: fragment(nameplate(ctx), avatar(ctx), nameLine(ctx), summary(ctx)),
+  });
 };
 
-export const renderNotice = (config: DiscordCardConfig, title: string, detail: string): string => {
-  const theme = createTheme(config.theme, config.accent ?? FALLBACK_ACCENT);
-  const metrics = METRICS[config.layout];
-  const x = config.padding;
-  const content: Block = {
-    height: metrics.body + 6 + metrics.line,
-    draw: (y) =>
-      h(
-        "g",
-        {},
-        h("text", { x, y: y + metrics.body, class: "t", "font-size": metrics.body + 1, "font-weight": 600 }, title),
-        h("text", { x, y: y + metrics.body + 6 + metrics.line - 4, class: "m", "font-size": metrics.body }, detail),
-      ),
-  };
-  return frame({ config, theme, label: title, content });
+export const renderNotice = (config: DiscordCardConfig, title: string, detail: string): Promise<string> => {
+  const x = ROW.inset;
+  return frame({
+    config,
+    label: title,
+    body: fragment(
+      h("text", { x, y: baseline(SUB_TOP - ROW.nameLine, ROW.nameLine, ROW.nameSize), class: "n" }, title),
+      h("text", { x, y: baseline(SUB_TOP, ROW.subLine, ROW.subSize), class: "s" }, detail),
+    ),
+  });
 };

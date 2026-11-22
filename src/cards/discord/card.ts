@@ -6,22 +6,17 @@ import type { DiscordCardConfig } from "./schema";
 
 export type CardResult = {
   readonly svg: string;
-  readonly live: boolean;
   readonly stale: boolean;
 };
 
 export const drawCard = async (config: DiscordCardConfig): Promise<CardResult> => {
   const [snapshot, profile] = await Promise.all([presenceOf(config.user)(), readProfile(config.user)]);
   if (snapshot.value.status === "untracked") {
-    return {
-      svg: renderNotice(config, "Not tracked by Lanyard", "Join discord.gg/lanyard to enable this card"),
-      live: false,
-      stale: snapshot.stale,
-    };
+    return { svg: await renderNotice(config, "Not tracked by Lanyard", "Join discord.gg/lanyard to enable this card"), stale: snapshot.stale };
   }
   const model = await buildModel(config, snapshot.value.presence, profile);
-  return { svg: renderCard(config, model), live: true, stale: snapshot.stale };
+  return { svg: await renderCard(config, model), stale: snapshot.stale };
 };
 
-export const drawUnavailable = (config: DiscordCardConfig): string =>
+export const drawUnavailable = (config: DiscordCardConfig): Promise<string> =>
   renderNotice(config, "Presence unavailable", "Lanyard did not respond, retrying shortly");

@@ -51,7 +51,7 @@ export const cardRoutes = new Hono().get("/", async (c) => {
     return svg(c, body, LIVE_CACHE);
   } catch (error) {
     console.error(error);
-    return svg(c, drawUnavailable(config), FAILURE_CACHE, 503);
+    return svg(c, await drawUnavailable(config), FAILURE_CACHE, 503);
   }
 });
 

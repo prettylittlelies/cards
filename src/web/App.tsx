@@ -1,5 +1,5 @@
 import { CARD_PATH } from "@/cards/discord/path";
-import styles from "./App.module.css";
+import * as styles from "./App.module.css";
 import { Editor } from "./Editor";
 import { Output } from "./Output";
 import { useConfig } from "./state";

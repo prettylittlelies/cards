@@ -1,5 +1,5 @@
 import { useState } from "react";
-import styles from "./App.module.css";
+import * as styles from "./App.module.css";
 import type { Minted } from "./useToken";
 
 type Snippet = {

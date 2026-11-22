@@ -1,6 +1,6 @@
 import { FALLBACK_ACCENT } from "@/cards/discord/schema";
 import { useId, type ReactNode } from "react";
-import styles from "./controls.module.css";
+import * as styles from "./controls.module.css";
 
 const cx = (...names: (string | false | undefined)[]): string => names.filter(Boolean).join(" ");
 

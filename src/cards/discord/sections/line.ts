@@ -18,15 +18,15 @@ const decoratorsWidth = ({ model }: Context): number => {
 export const contentX = (ctx: Context): number => (ctx.config.show.avatar ? CONTENT_X : ROW.inset);
 
 export const nameLine = (ctx: Context): Markup => {
-  const { model, config, fontWidth } = ctx;
+  const { model, config, em } = ctx;
   const x = contentX(ctx);
   const available = config.width - x - ROW.inset - decoratorsWidth(ctx);
-  const size = ROW.nameSize * fontWidth;
-  const name = truncate(model.name, available, size, 500);
+  const size = ROW.nameSize;
+  const name = truncate(model.name, available, size, em);
   const center = CONTENT_TOP + ROW.nameLine / 2;
   const color = STATUS_FILL[model.status];
 
-  let cursor = x + Math.min(measure(name, size, 500), available) + ROW.decoratorGap;
+  let cursor = x + Math.min(measure(name, size, em), available) + ROW.decoratorGap;
   const platforms = model.platforms.map((platform) => {
     const shape = PLATFORM_GLYPHS[platform];
     const markup = glyph(shape, cursor, center - ROW.decoratorSize / 2, ROW.decoratorSize, color, platform);

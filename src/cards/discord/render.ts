@@ -1,4 +1,4 @@
-import { FONT_WIDTH, fragment, h, hex, PALETTES, render, type Markup } from "@/render";
+import { fragment, h, hex, metricsOf, PALETTES, render, type Markup } from "@/render";
 import { ROW, type Context } from "./context";
 import type { CardModel } from "./model";
 import type { DiscordCardConfig } from "./schema";
@@ -55,7 +55,7 @@ const frame = async ({ config, label, body }: Frame): Promise<string> => {
 };
 
 export const renderCard = (config: DiscordCardConfig, model: CardModel): Promise<string> => {
-  const ctx: Context = { config, model, palette: PALETTES[config.theme], fontWidth: FONT_WIDTH[config.font] };
+  const ctx: Context = { config, model, palette: PALETTES[config.theme], em: metricsOf(config.font) };
   return frame({
     config,
     label: `${model.name} on Discord`,

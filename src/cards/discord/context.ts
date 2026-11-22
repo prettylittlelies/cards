@@ -1,5 +1,5 @@
 import type { DiscordStatus } from "@/discord/types";
-import type { Palette } from "@/render";
+import type { Measure, Palette } from "@/render";
 import type { CardModel } from "./model";
 import type { DiscordCardConfig } from "./schema";
 
@@ -38,5 +38,5 @@ export type Context = {
   readonly config: DiscordCardConfig;
   readonly model: CardModel;
   readonly palette: Palette;
-  readonly fontWidth: number;
+  readonly em: Measure;
 };

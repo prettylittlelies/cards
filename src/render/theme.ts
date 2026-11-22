@@ -20,9 +20,3 @@ export const FONT_STACKS: Readonly<Record<FontName, string>> = {
   poppins: "Poppins, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   system: "-apple-system, BlinkMacSystemFont, 'Segoe UI Variable Text', 'Segoe UI', Inter, sans-serif",
 };
-
-export const FONT_WIDTH: Readonly<Record<FontName, number>> = {
-  gg: 0.96,
-  poppins: 1,
-  system: 0.94,
-};

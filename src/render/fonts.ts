@@ -1,4 +1,6 @@
 import { join } from "node:path";
+import { openSync, type Font } from "fontkit";
+import { estimate, graphemes, type Measure } from "./text";
 import type { FontName } from "./theme";
 
 type Face = {
@@ -12,7 +14,12 @@ const FACES: Readonly<Record<FontName, Face | null>> = {
   system: null,
 };
 
-const cache = new Map<FontName, Promise<string>>();
+const faces = new Map<FontName, Promise<string>>();
+const metrics = new Map<FontName, Measure>();
+
+const SYSTEM_SAFETY = 1.1;
+
+const systemMeasure: Measure = (text) => estimate(text) * SYSTEM_SAFETY;
 
 const load = async (name: FontName): Promise<string> => {
   const face = FACES[name];
@@ -22,9 +29,28 @@ const load = async (name: FontName): Promise<string> => {
 };
 
 export const fontFace = (name: FontName): Promise<string> => {
-  const existing = cache.get(name);
+  const existing = faces.get(name);
   if (existing) return existing;
   const created = load(name);
-  cache.set(name, created);
+  faces.set(name, created);
+  return created;
+};
+
+const covers = (font: Font, grapheme: string): boolean => [...grapheme].every((char) => font.hasGlyphForCodePoint(char.codePointAt(0)!));
+
+const fromFont = (font: Font): Measure => (text) => {
+  const parts = graphemes(text);
+  const native = parts.filter((g) => covers(font, g)).join("");
+  const fallback = parts.filter((g) => !covers(font, g)).join("");
+  const advance = font.layout(native).glyphs.reduce((sum, glyph) => sum + glyph.advanceWidth, 0) / font.unitsPerEm;
+  return advance + estimate(fallback);
+};
+
+export const metricsOf = (name: FontName): Measure => {
+  const existing = metrics.get(name);
+  if (existing) return existing;
+  const face = FACES[name];
+  const created = face ? fromFont(openSync(face.path) as Font) : systemMeasure;
+  metrics.set(name, created);
   return created;
 };

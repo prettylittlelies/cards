@@ -1,5 +1,5 @@
 export const THEMES = ["dark", "light"] as const;
-export const FONTS = ["poppins", "system"] as const;
+export const FONTS = ["gg", "poppins", "system"] as const;
 
 export type ThemeName = (typeof THEMES)[number];
 export type FontName = (typeof FONTS)[number];
@@ -16,11 +16,13 @@ export const PALETTES: Readonly<Record<ThemeName, Palette>> = {
 };
 
 export const FONT_STACKS: Readonly<Record<FontName, string>> = {
+  gg: "'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif",
   poppins: "Poppins, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   system: "-apple-system, BlinkMacSystemFont, 'Segoe UI Variable Text', 'Segoe UI', Inter, sans-serif",
 };
 
 export const FONT_WIDTH: Readonly<Record<FontName, number>> = {
+  gg: 0.96,
   poppins: 1,
   system: 0.94,
 };

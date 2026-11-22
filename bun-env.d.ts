@@ -4,3 +4,7 @@ declare module "*.module.css" {
 }
 
 declare module "*.css" {}
+
+interface FontFaceSet {
+  add(font: FontFace): FontFaceSet;
+}

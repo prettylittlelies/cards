@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "bunVersion": "1.x",
+  "buildCommand": "bun run build && rm -rf .vercel-static && mkdir -p .vercel-static && cp -R dist/_c .vercel-static/_c",
+  "installCommand": "bun install",
+  "outputDirectory": ".vercel-static",
+  "functions": { "api/index.ts": { "includeFiles": "dist/**" } },
+  "rewrites": [{ "source": "/(.*)", "destination": "/api" }],
+  "headers": [
+    { "source": "/_c/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] }
+  ]
+}

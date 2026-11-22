@@ -8,6 +8,7 @@
     "build": "bun run build/main.ts",
     "start": "bun run build && bun src/server/main.ts",
     "serve": "NODE_ENV=production bun src/server/main.ts",
+    "assets": "bun scripts/assets.ts",
     "check": "tsc --noEmit",
     "test": "bun test"
   },

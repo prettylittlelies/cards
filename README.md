@@ -1,47 +1,62 @@
-# cards
+[![cards](assets/banner.svg)](https://discord.bhoppi.ng)
 
-Live presence cards for your README, rendered as self-contained SVG.
+<p align="center"><b>Live Discord presence for your README. One URL, no client, no tracking.</b></p>
+
+<p align="center">
+  <a href="https://github.com/prettylittlelies/cards"><img src="https://img.shields.io/github/languages/code-size/prettylittlelies/cards?style=for-the-badge&labelColor=0a0a0a&color=ededed&label=code%20size" alt="Code size"></a>
+  <a href="https://github.com/prettylittlelies/cards/stargazers"><img src="https://img.shields.io/github/stars/prettylittlelies/cards?style=for-the-badge&labelColor=0a0a0a&color=ededed&logo=github&logoColor=white" alt="Stars"></a>
+  <br>
+  <a href="https://bun.sh"><img src="https://img.shields.io/badge/Bun-000000?style=for-the-badge&logo=bun&logoColor=white" alt="Bun"></a>
+  <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-000000?style=for-the-badge&logo=typescript&logoColor=3178c6" alt="TypeScript"></a>
+  <a href="https://hono.dev"><img src="https://img.shields.io/badge/Hono-000000?style=for-the-badge&logo=hono&logoColor=ff5b11" alt="Hono"></a>
+</p>
+
+<p align="center">
+  <a href="#usage">Usage</a> · <a href="#options">Options</a> · <a href="#how-it-works">How it works</a> · <a href="#self-hosting">Self-hosting</a>
+</p>
+
+---
+
+## Usage
+
+Join the [Lanyard](https://discord.gg/lanyard) server, build your card at **[discord.bhoppi.ng](https://discord.bhoppi.ng)** and paste the snippet:
 
 ```md
 ![discord](https://discord.bhoppi.ng/cards/discord?jwt=<token>)
 ```
 
-Build a card at [discord.bhoppi.ng](https://discord.bhoppi.ng) and copy the snippet. You need to be in the [Lanyard](https://discord.gg/lanyard) server.
+![example card](assets/example.svg)
 
-## how it works
+## Options
 
-- **presence** comes from [Lanyard](https://github.com/Phineas/lanyard), cached for 10s
-- **badges, bio, pronouns, accent** come from [dcdn.dstn.to](https://dcdn.dstn.to), cached for 12h in memory and on disk, served stale for up to 14 days, with 2 concurrent requests max
-- **images** are inlined as `data:` URIs so the card renders inside GitHub's camo proxy
-- **the config** is a protobuf message (hand-rolled codec, defaults omitted, flags packed into varints), prefixed with a version and kind byte and signed with a truncated HMAC-SHA256. A typical token is about 40 characters.
-
-## options
-
-v1 is a port of the discord member row on [bhoppi.ng](https://bhoppi.ng): avatar with decoration and status cutout, platform icons, profile badges, an activity summary, and nameplate art colour-graded to the accent.
-
-| field | values |
+| Option | Values |
 | --- | --- |
-| theme | dark · light |
-| font | poppins (embedded) · system |
-| accent | auto (nameplate colour) or any hex |
-| width / scale / radius | 220–640 / 1–4× / 0–21 |
-| show | avatar, decoration, status, platforms, badges, activity, custom status, nameplate, surface |
-| motion | animated avatar, animated decoration, animated nameplate |
+| Theme | dark · light |
+| Font | gg sans · Poppins · system |
+| Accent | nameplate colour, or any hex |
+| Size | width 220–640 · scale 1–4× · radius 0–21 |
+| Show | avatar · decoration · status · platforms · badges · activity · custom status · nameplate · surface |
+| Motion | animated avatar · decoration · nameplate |
 
-## api
+## How it works
 
-```
-POST /x/cards/discord/token     json config → { token, url, bytes, tracked }
-GET  /x/cards/discord/defaults  default config
-GET  /cards/discord?jwt=…       image/svg+xml
-```
+- 🛰️ **Presence** comes from [Lanyard](https://github.com/Phineas/lanyard), cached for 10 seconds.
+- 🏷️ **Badges and accent** come from [dstn.to](https://dcdn.dstn.to), cached for 12 hours on disk and served stale for up to 14 days.
+- 🖼️ **Self-contained SVG.** Images and fonts are inlined, so the card renders through GitHub's image proxy.
+- 🔐 **Tiny signed tokens.** Your config is a hand-rolled protobuf message signed with HMAC-SHA256. A typical token is about 35 characters.
 
-## run
+## Self-hosting
+
+Requires [Bun](https://bun.sh).
 
 ```sh
+git clone https://github.com/prettylittlelies/cards
+cd cards
 bun install
-bun dev                 # hot builder + api
-bun run build && bun serve
+bun run build
+bun run serve
 ```
 
-Set `CARDS_SECRET` (≥32 bytes, base64) in production. Without it, a `.cardkey` file is generated, and tokens signed with one key don't verify under another.
+Set `CARDS_SECRET` to at least 32 random bytes, base64-encoded. Tokens only verify against the key that signed them.
+
+`bun run assets` regenerates the banner and example card in `assets/`.

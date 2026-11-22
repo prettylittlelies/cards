@@ -3,7 +3,7 @@ import { limiter } from "./limit";
 import { keyed, resource, type Resource } from "./resource";
 import { DAY, MINUTE, SECOND } from "./time";
 
-const MAX_BYTES = 384 * 1024;
+const MAX_BYTES = 2 * 1024 * 1024;
 const ALLOWED = /^image\/(png|jpeg|webp|gif|apng)$/;
 
 const gate = limiter(8);

@@ -29,6 +29,7 @@ export type Activity = {
   readonly assets?: ActivityAssets;
   readonly emoji?: ActivityEmoji;
   readonly created_at?: number;
+  readonly sync_id?: string;
 };
 
 export type AvatarDecoration = {
@@ -43,6 +44,7 @@ export type DiscordUser = {
   readonly avatar: string | null;
   readonly avatar_decoration_data: AvatarDecoration | null;
   readonly primary_guild?: { readonly tag: string | null; readonly identity_guild_id: string | null; readonly badge: string | null } | null;
+  readonly collectibles?: { readonly nameplate?: NameplateData | null } | null;
 };
 
 export type SpotifyTrack = {
@@ -60,6 +62,8 @@ export type Presence = {
   readonly active_on_discord_desktop?: boolean;
   readonly active_on_discord_mobile?: boolean;
   readonly active_on_discord_web?: boolean;
+  readonly active_on_discord_embedded?: boolean;
+  readonly active_on_discord_vr?: boolean;
   readonly activities: readonly Activity[];
   readonly listening_to_spotify: boolean;
   readonly spotify: SpotifyTrack | null;
@@ -93,4 +97,23 @@ export type Profile = {
   readonly bio: string;
   readonly pronouns: string;
   readonly accent: number | null;
+};
+
+export type NameplatePalette =
+  | "crimson"
+  | "berry"
+  | "sky"
+  | "teal"
+  | "forest"
+  | "bubble_gum"
+  | "violet"
+  | "cobalt"
+  | "clover"
+  | "lemon"
+  | "white";
+
+export type NameplateData = {
+  readonly asset: string;
+  readonly palette: NameplatePalette;
+  readonly label: string;
 };

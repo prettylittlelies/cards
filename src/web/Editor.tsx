@@ -1,5 +1,5 @@
 import type { Dispatch } from "react";
-import { DiscordCard, LAYOUTS, MOTION, SHOW } from "@/cards/discord/schema";
+import { DiscordCard, MOTION, SHOW } from "@/cards/discord/schema";
 import { FONTS, THEMES } from "@/render/theme";
 import { Chips, ColorInput, Row, Section, Segmented, Slider, TextInput } from "./controls";
 import { humanize, type Action, type Config } from "./state";
@@ -12,17 +12,13 @@ type Props = {
 type NumericKey = { [K in keyof Config]: Config[K] extends number ? K : never }[keyof Config] & keyof typeof DiscordCard;
 
 const SLIDERS: readonly (readonly [NumericKey, string, number?])[] = [
-  ["width", "width", 10],
+  ["width", "width", 4],
   ["radius", "radius"],
-  ["padding", "padding", 2],
-  ["activities", "activities"],
-  ["bioLines", "bio lines"],
+  ["scale", "scale"],
 ];
 
 const TEXTS = [
   ["name", "name", "display name"],
-  ["tagline", "bio", "overrides your profile bio"],
-  ["offline", "idle text", DiscordCard.offline.default],
 ] as const satisfies readonly (readonly [keyof Config, string, string])[];
 
 export const Editor = ({ config, dispatch }: Props) => {
@@ -48,7 +44,6 @@ export const Editor = ({ config, dispatch }: Props) => {
 
       <Section title="look">
         <Row label="theme">{(id) => <Segmented id={id} options={THEMES} value={config.theme} onChange={(theme) => set({ theme })} />}</Row>
-        <Row label="layout">{(id) => <Segmented id={id} options={LAYOUTS} value={config.layout} onChange={(layout) => set({ layout })} />}</Row>
         <Row label="font">{(id) => <Segmented id={id} options={FONTS} value={config.font} onChange={(font) => set({ font })} />}</Row>
         <Row label="accent">{(id) => <ColorInput id={id} value={config.accent} onChange={(accent) => set({ accent })} />}</Row>
       </Section>

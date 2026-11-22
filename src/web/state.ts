@@ -10,13 +10,14 @@ export type Action =
   | { readonly type: "flag"; readonly group: FlagGroup; readonly name: string; readonly value: boolean }
   | { readonly type: "reset" };
 
-const STORAGE_KEY = "cards.discord";
+const STORAGE_KEY = "cards.discord.v1";
 
 export const DEFAULTS: Config = defaultsOf(DiscordCard);
 
 const restore = (): Config => {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null") as Partial<Config> | null;
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null") as Record<string, unknown> | null;
+    const saved = raw ? (Object.fromEntries(Object.entries(raw).filter(([key]) => key in DEFAULTS)) as Partial<Config>) : null;
     return saved ? { ...DEFAULTS, ...saved, show: { ...DEFAULTS.show, ...saved.show }, motion: { ...DEFAULTS.motion, ...saved.motion } } : DEFAULTS;
   } catch {
     return DEFAULTS;

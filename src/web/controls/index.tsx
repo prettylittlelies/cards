@@ -1,4 +1,3 @@
-import { FALLBACK_ACCENT } from "@/cards/discord/schema";
 import { useId, type ReactNode } from "react";
 import * as styles from "./controls.module.css";
 
@@ -103,6 +102,8 @@ type ColorProps = {
   readonly onChange: (value: number | null) => void;
 };
 
+const PICKER_DEFAULT = 0x900007;
+
 const toHex = (value: number): string => `#${value.toString(16).padStart(6, "0")}`;
 
 export const ColorInput = ({ id, value, onChange }: ColorProps) => (
@@ -111,14 +112,14 @@ export const ColorInput = ({ id, value, onChange }: ColorProps) => (
       type="color"
       aria-label="accent colour"
       className={styles.swatch}
-      value={toHex(value ?? FALLBACK_ACCENT)}
+      value={toHex(value ?? PICKER_DEFAULT)}
       onChange={(event) => onChange(Number.parseInt(event.currentTarget.value.slice(1), 16))}
     />
     <Segmented
       id={id}
       options={["auto", "custom"] as const}
       value={value === null ? "auto" : "custom"}
-      onChange={(mode) => onChange(mode === "auto" ? null : (value ?? FALLBACK_ACCENT))}
+      onChange={(mode) => onChange(mode === "auto" ? null : (value ?? PICKER_DEFAULT))}
     />
   </div>
 );

@@ -10,7 +10,7 @@ import { DISCORD_TOKEN } from "./token";
 
 const SVG_HEADERS = {
   "Content-Type": "image/svg+xml; charset=utf-8",
-  "Content-Security-Policy": "default-src 'none'; img-src data:; style-src 'unsafe-inline'",
+  "Content-Security-Policy": "default-src 'none'; img-src data:; font-src data:; style-src 'unsafe-inline'",
   "X-Content-Type-Options": "nosniff",
 } as const;
 

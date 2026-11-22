@@ -2,6 +2,7 @@ import { CARD_PATH } from "@/cards/discord/path";
 import * as styles from "./App.module.css";
 import { Editor } from "./Editor";
 import { Output } from "./Output";
+import { Preview } from "./Preview";
 import { useConfig } from "./state";
 import { mintedOf, useToken } from "./useToken";
 
@@ -28,7 +29,7 @@ export const App = () => {
         <section className={styles.stage} aria-live="polite">
           <div className={styles.canvas} data-pending={state.status === "pending"}>
             {minted ? (
-              <img className={styles.card} src={`${CARD_PATH}?jwt=${minted.token}`} alt="card preview" width={config.width} />
+              <Preview src={`${CARD_PATH}?jwt=${minted.token}`} width={config.width} />
             ) : (
               <p className={styles.empty}>{state.status === "error" ? state.message : "enter a discord id to start"}</p>
             )}

@@ -1,3 +1,4 @@
+import { UpstreamError } from "./errors";
 import { hotSingleton } from "./hot";
 import { limiter } from "./limit";
 import { keyed, resource, type Resource } from "./resource";
@@ -8,21 +9,21 @@ const ALLOWED = /^image\/(png|jpeg|webp|gif|apng)$/;
 
 const gate = limiter(8);
 
-const toDataUri = async (url: string, signal: AbortSignal): Promise<string | null> =>
+const toDataUri = (url: string, signal: AbortSignal): Promise<string> =>
   gate(async () => {
     const response = await fetch(url, { signal, headers: { Accept: "image/webp,image/png,image/*;q=0.8" } });
-    if (!response.ok) return null;
+    if (!response.ok) throw new UpstreamError("image", `${url} responded ${response.status}`);
     const type = (response.headers.get("Content-Type") ?? "").split(";")[0]!.trim().toLowerCase();
-    if (!ALLOWED.test(type)) return null;
+    if (!ALLOWED.test(type)) throw new UpstreamError("image", `${url} is ${type || "untyped"}`);
     const bytes = new Uint8Array(await response.arrayBuffer());
-    if (bytes.byteLength > MAX_BYTES) return null;
+    if (bytes.byteLength > MAX_BYTES) throw new UpstreamError("image", `${url} exceeds ${MAX_BYTES} bytes`);
     return `data:${type};base64,${Buffer.from(bytes).toString("base64")}`;
   });
 
-const images: (url: string) => Resource<string | null> = hotSingleton("inline-images", () =>
+const images: (url: string) => Resource<string> = hotSingleton("inline-data-uris", () =>
   keyed(
     (url: string) => url,
-    (url) => resource((signal) => toDataUri(url, signal), { ttlMs: DAY, staleMs: 6 * DAY, timeoutMs: 6 * SECOND, retryMs: 10 * MINUTE }),
+    (url) => resource((signal) => toDataUri(url, signal), { ttlMs: DAY, staleMs: 6 * DAY, timeoutMs: 15 * SECOND, retryMs: 10 * MINUTE }),
     1024,
   ),
 );

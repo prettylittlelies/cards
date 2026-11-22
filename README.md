@@ -17,15 +17,16 @@ Build a card at [discord.bhoppi.ng](https://discord.bhoppi.ng) and copy the snip
 
 ## options
 
+v1 is a port of the discord member row on [bhoppi.ng](https://bhoppi.ng): avatar with decoration and status cutout, platform icons, profile badges, an activity summary, and nameplate art colour-graded to the accent.
+
 | field | values |
 | --- | --- |
-| theme | graphite · midnight · paper · mono · tinted |
-| layout | stack · compact |
-| font | system · geometric · mono · serif |
-| accent | auto (profile) or any hex |
-| width / radius / padding | 300–640 / 0–40 / 8–40 |
-| show | avatar, decoration, status, username, pronouns, badges, bio, custom status, spotify, activities, elapsed, platform, border, glow, dividers |
-| motion | progress, equalizer, pulse, animated avatar, animated decoration, fade in |
+| theme | dark · light |
+| font | poppins (embedded) · system |
+| accent | auto (nameplate colour) or any hex |
+| width / scale / radius | 220–640 / 1–4× / 0–21 |
+| show | avatar, decoration, status, platforms, badges, activity, custom status, nameplate, surface |
+| motion | animated avatar, animated decoration, animated nameplate |
 
 ## api
 

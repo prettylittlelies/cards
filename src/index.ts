@@ -1,6 +1,7 @@
 import { basename, join } from "node:path";
 import { serve } from "bun";
 import { createApi, ROUTES } from "@/api/app";
+import { telegram } from "@/telegram/service";
 import { FONT_DIR, FONT_PREFIX } from "./asset-dir";
 import index from "./web/index.html";
 
@@ -22,5 +23,7 @@ const server = serve({
   ]),
   development: process.env.NODE_ENV !== "production" && { hmr: false, console: true },
 });
+
+telegram.warm();
 
 console.log(`cards at ${server.url}`);

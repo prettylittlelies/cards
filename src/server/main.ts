@@ -1,3 +1,4 @@
+import { telegram } from "@/telegram/service";
 import { createApp } from "./app";
 
 const { config, manifest, fetch } = await createApp();
@@ -14,10 +15,12 @@ const server = Bun.serve({
 
 const shutdown = async (signal: NodeJS.Signals) => {
   console.log(`${signal} received, draining`);
-  await server.stop();
+  await Promise.all([telegram.close(), server.stop()]);
   process.exit(0);
 };
 
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, shutdown);
+
+telegram.warm();
 
 console.log(`serving ${manifest.size} assets from ${config.root}/ at ${server.url}`);

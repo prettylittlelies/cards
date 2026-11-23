@@ -9,11 +9,13 @@
     "start": "bun run build && bun src/server/main.ts",
     "serve": "NODE_ENV=production bun src/server/main.ts",
     "assets": "bun scripts/assets.ts",
+    "telegram:login": "bun scripts/telegram-login.ts",
     "check": "tsc --noEmit",
     "test": "bun test"
   },
   "dependencies": {
     "@fontsource/poppins": "^5.3.0",
+    "@mtcute/bun": "^0.32.3",
     "fontkit": "2",
     "hono": "^4.13.18",
     "react": "^19",

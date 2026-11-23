@@ -22,10 +22,12 @@ export type ConsentStore = {
   readonly lookup: (username: string) => Promise<Consent | null>;
   readonly grant: (id: number, username: string) => Promise<void>;
   readonly revoke: (id: number) => Promise<boolean>;
+  readonly generation: () => number;
 };
 
 export const createConsentStore = (path: string = FILE): ConsentStore => {
   let entries: Promise<Map<string, Consent>> | null = null;
+  let changes = 0;
 
   const load = (): Promise<Map<string, Consent>> =>
     (entries ??= (async () => {
@@ -36,6 +38,7 @@ export const createConsentStore = (path: string = FILE): ConsentStore => {
     })());
 
   const save = async (map: Map<string, Consent>): Promise<void> => {
+    changes += 1;
     await Bun.write(path, JSON.stringify([...map.values()], null, 2), { createPath: true });
   };
 
@@ -54,5 +57,6 @@ export const createConsentStore = (path: string = FILE): ConsentStore => {
       if (keys.length > 0) await save(map);
       return keys.length > 0;
     },
+    generation: () => changes,
   };
 };

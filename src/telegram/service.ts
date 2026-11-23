@@ -61,9 +61,9 @@ const live = (connection: TelegramConnection, consent: ConsentStore): TelegramSe
 
   const palette = resource<ProfilePalette>((signal) => run(signal, loadPalette), { ...ASSET_OPTIONS, ttlMs: DAY });
 
-  const profile = keyed(
-    (username: string) => username.toLowerCase(),
-    (username) =>
+  const profiles = keyed(
+    ({ username, generation }: { readonly username: string; readonly generation: number }) => `${username.toLowerCase()}:${generation}`,
+    ({ username }) =>
       resource<ProfileLookup>(async (signal) => {
         const granted = await consent.lookup(username);
         if (!granted) return { status: "private" };
@@ -98,7 +98,7 @@ const live = (connection: TelegramConnection, consent: ConsentStore): TelegramSe
   return {
     consent,
     account: () => settle("account", account, null),
-    profile,
+    profile: (username) => profiles({ username, generation: consent.generation() }),
     avatar: (entry) => settle(`avatar ${entry.id}`, avatars(entry), null),
     emoji: (documentId) => settle(`emoji ${documentId}`, emojis(documentId), EMPTY_ART),
     warm: () => void connection.client().catch((error: unknown) => console.error("telegram:", error)),

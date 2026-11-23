@@ -43,7 +43,10 @@ const settle = async <T>(source: Resource<T>, fallback: T): Promise<T> => {
 const live = (connection: TelegramConnection, consent: ConsentStore): TelegramService => {
   const run = <T>(signal: AbortSignal, task: (tg: TelegramClient) => Promise<T>): Promise<T> =>
     Promise.race([
-      connection.client().then(task),
+      connection.client().then(task).catch((error: unknown) => {
+        connection.report(error);
+        throw error;
+      }),
       new Promise<never>((_, reject) => signal.addEventListener("abort", () => reject(signal.reason), { once: true })),
     ]);
 

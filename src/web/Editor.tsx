@@ -1,81 +1,95 @@
-import type { Dispatch } from "react";
-import { DiscordCard, MOTION, SHOW } from "@/cards/discord/schema";
-import { FONTS, THEMES } from "@/render/theme";
+import type { ReactNode } from "react";
+import type { Field } from "@/proto/schema";
+import type { Entry } from "./catalog";
 import { Chips, ColorInput, Row, Section, Segmented, Slider, TextInput } from "./controls";
-import { humanize, type Action, type Config } from "./state";
+import { humanize, type Config, type Patch } from "./state";
 
 type Props = {
+  readonly entry: Entry;
   readonly config: Config;
-  readonly dispatch: Dispatch<Action>;
+  readonly onChange: (patch: Patch) => void;
 };
 
-type NumericKey = { [K in keyof Config]: Config[K] extends number ? K : never }[keyof Config] & keyof typeof DiscordCard;
+type Group = "look" | "size" | "flags" | "text";
 
-const SLIDERS: readonly (readonly [NumericKey, string, number?])[] = [
-  ["width", "width", 4],
-  ["radius", "radius"],
-  ["scale", "scale"],
-];
+const GROUP: Readonly<Record<Field["kind"], Group | null>> = {
+  enum: "look",
+  color: "look",
+  uint: "size",
+  flags: "flags",
+  text: "text",
+  bool: "look",
+  snowflake: null,
+  message: null,
+};
 
-const TEXTS = [
-  ["name", "name", "display name"],
-] as const satisfies readonly (readonly [keyof Config, string, string])[];
+const SLIDER_STEP: Readonly<Record<string, number>> = { width: 4 };
 
-export const Editor = ({ config, dispatch }: Props) => {
-  const set = (patch: Partial<Config>) => dispatch({ type: "set", patch });
+const control = (name: string, field: Field, value: unknown, set: (value: unknown) => void, id: string): ReactNode => {
+  switch (field.kind) {
+    case "enum":
+      return <Segmented id={id} options={field.values} value={value as string} onChange={set} />;
+    case "color":
+      return <ColorInput id={id} value={value as number | null} onChange={set} />;
+    case "uint":
+      return <Slider id={id} min={field.min} max={field.max} step={SLIDER_STEP[name]} value={value as number} onChange={set} />;
+    case "text":
+      return <TextInput id={id} value={value as string} maxLength={field.max} placeholder={humanize(name)} onChange={set} />;
+    case "bool":
+      return <Segmented id={id} options={["off", "on"] as const} value={value ? "on" : "off"} onChange={(next) => set(next === "on")} />;
+    default:
+      return null;
+  }
+};
+
+export const Editor = ({ entry, config, onChange }: Props) => {
+  const { schema, identity } = entry;
+  const fields = Object.entries(schema).filter(([name]) => name !== "user");
+  const grouped = (group: Group) => fields.filter(([, field]) => GROUP[field.kind] === group);
+  const user = String(config.user ?? "");
+
+  const rows = (group: Group) =>
+    grouped(group).map(([name, field]) => (
+      <Row key={name} label={humanize(name)}>
+        {(id) => control(name, field, config[name], (value) => onChange({ [name]: value }), id)}
+      </Row>
+    ));
 
   return (
     <>
       <Section title="user">
-        <Row label="discord id">
+        <Row label={identity.label}>
           {(id) => (
             <TextInput
               id={id}
-              mono
-              inputMode="numeric"
-              placeholder="442626774841556992"
-              value={config.user === "0" ? "" : config.user}
-              maxLength={20}
-              onChange={(value) => set({ user: value.replace(/\D/g, "") || "0" })}
+              mono={identity.mono}
+              placeholder={identity.placeholder}
+              value={user === identity.empty ? "" : user}
+              maxLength={32}
+              onChange={(value) => onChange({ user: identity.clean(value) })}
             />
           )}
         </Row>
+        <p className="hint">{identity.hint}</p>
       </Section>
 
-      <Section title="look">
-        <Row label="theme">{(id) => <Segmented id={id} options={THEMES} value={config.theme} onChange={(theme) => set({ theme })} />}</Row>
-        <Row label="font">{(id) => <Segmented id={id} options={FONTS} value={config.font} onChange={(font) => set({ font })} />}</Row>
-        <Row label="accent">{(id) => <ColorInput id={id} value={config.accent} onChange={(accent) => set({ accent })} />}</Row>
-      </Section>
+      <Section title="look">{rows("look")}</Section>
+      <Section title="size">{rows("size")}</Section>
 
-      <Section title="size">
-        {SLIDERS.map(([key, label, step]) => {
-          const bounds = DiscordCard[key];
-          return (
-            <Row key={key} label={label}>
-              {(id) => <Slider id={id} min={bounds.min} max={bounds.max} step={step} value={config[key]} onChange={(value) => set({ [key]: value })} />}
-            </Row>
-          );
-        })}
-      </Section>
+      {grouped("flags").map(([name, field]) =>
+        field.kind === "flags" ? (
+          <Section key={name} title={humanize(name)}>
+            <Chips
+              names={field.values}
+              value={config[name] as Readonly<Record<string, boolean>>}
+              label={humanize}
+              onToggle={(flag, value) => onChange({ [name]: { ...(config[name] as object), [flag]: value } })}
+            />
+          </Section>
+        ) : null,
+      )}
 
-      <Section title="show">
-        <Chips names={SHOW} value={config.show} label={humanize} onToggle={(name, value) => dispatch({ type: "flag", group: "show", name, value })} />
-      </Section>
-
-      <Section title="motion">
-        <Chips names={MOTION} value={config.motion} label={humanize} onToggle={(name, value) => dispatch({ type: "flag", group: "motion", name, value })} />
-      </Section>
-
-      <Section title="text">
-        {TEXTS.map(([key, label, placeholder]) => (
-          <Row key={key} label={label}>
-            {(id) => (
-              <TextInput id={id} value={config[key]} placeholder={placeholder} maxLength={DiscordCard[key].max} onChange={(value) => set({ [key]: value })} />
-            )}
-          </Row>
-        ))}
-      </Section>
+      <Section title="text">{rows("text")}</Section>
     </>
   );
 };

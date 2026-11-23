@@ -44,3 +44,9 @@ select {
 ::selection {
   background: #a1a1ff40;
 }
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--faint);
+}

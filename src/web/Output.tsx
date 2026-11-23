@@ -36,7 +36,7 @@ export const Output = ({ minted }: { readonly minted: Minted }) => {
         );
       })}
       <p className={styles.meta}>
-        {minted.bytes} char token · protobuf + hmac{minted.tracked === false ? " · not on lanyard yet, join discord.gg/lanyard" : ""}
+        {minted.bytes} char token · protobuf + hmac{minted.tracked === false ? " · not live yet, see the hint under user" : ""}
       </p>
     </div>
   );

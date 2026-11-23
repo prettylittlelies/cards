@@ -108,3 +108,8 @@
 .preview[data-loading="true"] {
   opacity: 0.6;
 }
+
+.kinds {
+  width: 200px;
+  margin-left: 12px;
+}

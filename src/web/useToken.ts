@@ -1,5 +1,6 @@
-import { MINT_PATH } from "@/cards/discord/path";
+import { mintPath, type CardKind } from "@/cards/paths";
 import { useEffect, useState } from "react";
+import type { Identity } from "./catalog";
 import type { Config } from "./state";
 
 export type Minted = {
@@ -20,8 +21,8 @@ const SNOWFLAKE = /^\d{17,20}$/;
 
 type Problem = { readonly title?: string; readonly detail?: string };
 
-const mint = async (config: Config, signal: AbortSignal): Promise<Minted> => {
-  const response = await fetch(MINT_PATH, {
+const mint = async (kind: CardKind, config: Config, signal: AbortSignal): Promise<Minted> => {
+  const response = await fetch(mintPath(kind), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(config),
@@ -37,18 +38,18 @@ const mint = async (config: Config, signal: AbortSignal): Promise<Minted> => {
 const lastOf = (state: TokenState): Minted | null =>
   state.status === "ready" ? state.minted : state.status === "idle" ? null : state.last;
 
-export const useToken = (config: Config): TokenState => {
+export const useToken = (kind: CardKind, identity: Identity, config: Config): TokenState => {
   const [state, setState] = useState<TokenState>({ status: "idle" });
 
   useEffect(() => {
-    if (!SNOWFLAKE.test(config.user)) {
+    if (!identity.valid(String(config.user ?? ""))) {
       setState({ status: "idle" });
       return;
     }
     const controller = new AbortController();
     setState((previous) => ({ status: "pending", last: lastOf(previous) }));
     const timer = setTimeout(() => {
-      mint(config, controller.signal)
+      mint(kind, config, controller.signal)
         .then((minted) => setState({ status: "ready", minted }))
         .catch((error: unknown) => {
           if (controller.signal.aborted) return;
@@ -59,7 +60,7 @@ export const useToken = (config: Config): TokenState => {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [config]);
+  }, [kind, identity, config]);
 
   return state;
 };

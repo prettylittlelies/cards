@@ -32,10 +32,11 @@ const PROFILE_OPTIONS = { ttlMs: 30 * SECOND, staleMs: 10 * MINUTE, timeoutMs: 2
 const ASSET_OPTIONS = { ttlMs: DAY, staleMs: 7 * DAY, timeoutMs: 30 * SECOND, retryMs: 10 * MINUTE };
 const EMPTY_ART: EmojiArt = { outline: null, image: null };
 
-const settle = async <T>(source: Resource<T>, fallback: T): Promise<T> => {
+const settle = async <T>(label: string, source: Resource<T>, fallback: T): Promise<T> => {
   try {
     return (await source()).value;
-  } catch {
+  } catch (error) {
+    console.error(`telegram: ${label} failed`, error);
     return fallback;
   }
 };
@@ -68,7 +69,7 @@ const live = (connection: TelegramConnection, consent: ConsentStore): TelegramSe
         if (!granted) return { status: "private" };
         const [user, colors] = await Promise.all([
           run(signal, (tg) => tg.getFullUser(granted.id).catch(() => tg.getFullUser(granted.username))),
-          settle(palette, new Map() as ProfilePalette),
+          settle("profile colours", palette, new Map() as ProfilePalette),
         ]);
         if (user.id !== granted.id) return { status: "private" };
         return { status: "ok", profile: toProfile(user, granted.username, colors) };
@@ -96,10 +97,10 @@ const live = (connection: TelegramConnection, consent: ConsentStore): TelegramSe
 
   return {
     consent,
-    account: () => settle(account, null),
+    account: () => settle("account", account, null),
     profile,
-    avatar: (entry) => settle(avatars(entry), null),
-    emoji: (documentId) => settle(emojis(documentId), EMPTY_ART),
+    avatar: (entry) => settle(`avatar ${entry.id}`, avatars(entry), null),
+    emoji: (documentId) => settle(`emoji ${documentId}`, emojis(documentId), EMPTY_ART),
     warm: () => void connection.client().catch((error: unknown) => console.error("telegram:", error)),
     close: connection.close,
   };

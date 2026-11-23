@@ -30,7 +30,6 @@ export const createClient = (credentials: TelegramCredentials, storage?: string)
     ...credentials,
     storage: storage ? new SqliteStorage(storage) : new MemoryStorage(),
     initConnectionOptions: DEVICE,
-    network: { usePfs: true },
   });
 
 export class SessionRevokedError extends Error {

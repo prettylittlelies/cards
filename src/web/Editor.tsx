@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
 import type { Field } from "@/proto/schema";
-import type { Entry } from "./catalog";
+import type { About, Entry, HintPart } from "./catalog";
 import { Chips, ColorInput, Row, Section, Segmented, Slider, TextInput } from "./controls";
 import { humanize, type Config, type Patch } from "./state";
 
 type Props = {
   readonly entry: Entry;
   readonly config: Config;
+  readonly about: About;
   readonly onChange: (patch: Patch) => void;
 };
 
@@ -42,7 +43,16 @@ const control = (name: string, field: Field, value: unknown, set: (value: unknow
   }
 };
 
-export const Editor = ({ entry, config, onChange }: Props) => {
+const hintPart = (part: HintPart, index: number): ReactNode =>
+  typeof part === "string" ? (
+    part
+  ) : (
+    <a key={index} href={part.href} target="_blank" rel="noreferrer">
+      {part.text}
+    </a>
+  );
+
+export const Editor = ({ entry, config, about, onChange }: Props) => {
   const { schema, identity } = entry;
   const fields = Object.entries(schema).filter(([name]) => name !== "user");
   const grouped = (group: Group) => fields.filter(([, field]) => GROUP[field.kind] === group);
@@ -70,7 +80,7 @@ export const Editor = ({ entry, config, onChange }: Props) => {
             />
           )}
         </Row>
-        <p className="hint">{identity.hint}</p>
+        <p className="hint">{identity.hint(about).map(hintPart)}</p>
       </Section>
 
       <Section title="look">{rows("look")}</Section>

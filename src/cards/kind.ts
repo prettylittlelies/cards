@@ -14,6 +14,7 @@ export type CardDefinition<S extends Schema> = {
   readonly draw: (config: Infer<S>) => Promise<Drawn>;
   readonly unavailable: (config: Infer<S>) => Promise<string>;
   readonly inspect: (config: Infer<S>) => Promise<Readonly<Record<string, unknown>>>;
+  readonly about?: () => Promise<Readonly<Record<string, unknown>>>;
 };
 
 export const defineCard = <S extends Schema>(definition: CardDefinition<S>): CardDefinition<S> => definition;

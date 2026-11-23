@@ -13,8 +13,14 @@ export type ProfileLookup =
   | { readonly status: "private" }
   | { readonly status: "unconfigured" };
 
+export type Account = {
+  readonly username: string;
+  readonly name: string;
+};
+
 export type TelegramService = {
   readonly consent: ConsentStore;
+  readonly account: () => Promise<Account | null>;
   readonly profile: (username: string) => Resource<ProfileLookup>;
   readonly avatar: (profile: TelegramProfile) => Promise<string | null>;
   readonly emoji: (documentId: string) => Promise<EmojiArt>;
@@ -40,6 +46,14 @@ const live = (connection: TelegramConnection, consent: ConsentStore): TelegramSe
       connection.client().then(task),
       new Promise<never>((_, reject) => signal.addEventListener("abort", () => reject(signal.reason), { once: true })),
     ]);
+
+  const account = resource<Account | null>(
+    (signal) => run(signal, async (tg) => {
+      const me = await tg.getMe();
+      return me.username ? { username: me.username, name: me.displayName } : null;
+    }),
+    ASSET_OPTIONS,
+  );
 
   const palette = resource<ProfilePalette>((signal) => run(signal, loadPalette), { ...ASSET_OPTIONS, ttlMs: DAY });
 
@@ -79,6 +93,7 @@ const live = (connection: TelegramConnection, consent: ConsentStore): TelegramSe
 
   return {
     consent,
+    account: () => settle(account, null),
     profile,
     avatar: (entry) => settle(avatars(entry), null),
     emoji: (documentId) => settle(emojis(documentId), EMPTY_ART),
@@ -89,6 +104,7 @@ const live = (connection: TelegramConnection, consent: ConsentStore): TelegramSe
 
 const unconfigured = (consent: ConsentStore): TelegramService => ({
   consent,
+  account: () => Promise.resolve(null),
   profile: () => () => Promise.resolve({ value: { status: "unconfigured" }, fetchedAt: Date.now(), stale: false }),
   avatar: () => Promise.resolve(null),
   emoji: () => Promise.resolve(EMPTY_ART),

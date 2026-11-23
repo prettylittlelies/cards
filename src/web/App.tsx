@@ -6,6 +6,7 @@ import { Editor } from "./Editor";
 import { Output } from "./Output";
 import { Preview } from "./Preview";
 import { useBuilder } from "./state";
+import { useAbout } from "./useAbout";
 import { mintedOf, useToken } from "./useToken";
 
 export const App = () => {
@@ -14,6 +15,7 @@ export const App = () => {
   const config = configs[kind];
   const state = useToken(kind, entry.identity, config);
   const minted = mintedOf(state);
+  const about = useAbout(kind);
 
   return (
     <main className={styles.shell}>
@@ -29,7 +31,7 @@ export const App = () => {
 
       <div className={styles.grid}>
         <aside className={styles.panel}>
-          <Editor key={kind} entry={entry} config={config} onChange={(patch) => dispatch({ type: "set", patch })} />
+          <Editor key={kind} entry={entry} config={config} about={about} onChange={(patch) => dispatch({ type: "set", patch })} />
         </aside>
 
         <section className={styles.stage} aria-live="polite">

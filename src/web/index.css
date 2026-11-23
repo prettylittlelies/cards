@@ -50,3 +50,13 @@ select {
   font-size: 12px;
   color: var(--faint);
 }
+
+.hint a {
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.hint a:hover {
+  color: var(--text);
+}

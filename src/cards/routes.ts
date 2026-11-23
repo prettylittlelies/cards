@@ -51,6 +51,10 @@ export const mintRoutes = <S extends Schema>(card: CardDefinition<S>) =>
       c.header("Cache-Control", "public, max-age=3600");
       return c.json(defaultsOf(card.token.schema));
     })
+    .get("/about", async (c) => {
+      c.header("Cache-Control", "public, max-age=300");
+      return c.json((await card.about?.()) ?? {});
+    })
     .post("/token", async (c) => {
       const body: unknown = await c.req.json().catch(() => null);
       const config = attempt(() => coerce(card.token.schema, body), ProtoError);

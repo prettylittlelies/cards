@@ -17,8 +17,16 @@ const REPLIES = {
   unknown: "Send /card to opt in to a Telegram card, or /stop to opt out.",
 } as const;
 
+export const DEVICE = {
+  deviceModel: "cards.bhoppi.ng",
+  systemVersion: "Linux",
+  appVersion: "cards 1.0",
+  systemLangCode: "en",
+  langCode: "en",
+} as const;
+
 export const createClient = (credentials: TelegramCredentials, storage?: string): TelegramClient =>
-  new TelegramClient({ ...credentials, storage: storage ? new SqliteStorage(storage) : undefined });
+  new TelegramClient({ ...credentials, storage: storage ? new SqliteStorage(storage) : undefined, initConnectionOptions: DEVICE });
 
 export type TelegramConnection = {
   readonly client: () => Promise<TelegramClient>;

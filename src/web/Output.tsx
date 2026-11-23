@@ -1,21 +1,22 @@
 import { useState } from "react";
 import * as styles from "./Output.module.css";
+import type { CardKind } from "@/cards/paths";
 import type { Minted } from "./useToken";
 
 type Snippet = {
   readonly label: string;
-  readonly render: (minted: Minted) => string;
+  readonly render: (minted: Minted, kind: CardKind) => string;
 };
 
 const SNIPPETS: readonly Snippet[] = [
   { label: "url", render: ({ url }) => url },
-  { label: "markdown", render: ({ url }) => `![discord](${url})` },
-  { label: "html", render: ({ url }) => `<img src="${url}" alt="discord presence" />` },
+  { label: "markdown", render: ({ url }, kind) => `![${kind}](${url})` },
+  { label: "html", render: ({ url }, kind) => `<img src="${url}" alt="${kind} presence" />` },
 ];
 
 const COPIED_MS = 1200;
 
-export const Output = ({ minted }: { readonly minted: Minted }) => {
+export const Output = ({ minted, kind }: { readonly minted: Minted; readonly kind: CardKind }) => {
   const [copied, setCopied] = useState<string | null>(null);
 
   const copy = async (label: string, value: string) => {
@@ -27,7 +28,7 @@ export const Output = ({ minted }: { readonly minted: Minted }) => {
   return (
     <div className={styles.output}>
       {SNIPPETS.map(({ label, render }) => {
-        const value = render(minted);
+        const value = render(minted, kind);
         return (
           <button key={label} type="button" className={styles.snippet} onClick={() => copy(label, value)}>
             <span className={styles.snippetLabel}>{copied === label ? "copied" : label}</span>

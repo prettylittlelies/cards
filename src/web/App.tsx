@@ -43,7 +43,7 @@ export const App = () => {
             )}
           </div>
           {state.status === "error" && minted && <p className={styles.error}>{state.message}</p>}
-          {minted && <Output minted={minted} />}
+          {minted && <Output minted={minted} kind={kind} />}
         </section>
       </div>
     </main>

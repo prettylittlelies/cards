@@ -32,6 +32,7 @@ export const Preview = ({ src, width }: Props) => {
   return (
     <div className={styles.preview} data-loading={shown.loading}>
       {shown.src && <img className={styles.card} src={shown.src} alt="card preview" width={width} />}
+      {!shown.src && !shown.failed && <p className={styles.empty}>loading card…</p>}
       {shown.failed && <p className={styles.error}>card failed to load</p>}
     </div>
   );

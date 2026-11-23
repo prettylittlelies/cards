@@ -7,3 +7,6 @@ dist
 .cardkey
 *.tsbuildinfo
 .DS_Store
+*.session
+*.session-shm
+*.session-wal

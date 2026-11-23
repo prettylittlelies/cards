@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { SqliteStorage, TelegramClient, type Message } from "@mtcute/bun";
+import { MemoryStorage, SqliteStorage, TelegramClient, type Message } from "@mtcute/bun";
 import type { TelegramConfig, TelegramCredentials } from "./config";
 import type { ConsentStore } from "./consent";
 
@@ -26,7 +26,7 @@ export const DEVICE = {
 } as const;
 
 export const createClient = (credentials: TelegramCredentials, storage?: string): TelegramClient =>
-  new TelegramClient({ ...credentials, storage: storage ? new SqliteStorage(storage) : undefined, initConnectionOptions: DEVICE });
+  new TelegramClient({ ...credentials, storage: storage ? new SqliteStorage(storage) : new MemoryStorage(), initConnectionOptions: DEVICE });
 
 export type TelegramConnection = {
   readonly client: () => Promise<TelegramClient>;

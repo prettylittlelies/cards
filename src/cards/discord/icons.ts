@@ -1,9 +1,5 @@
 import type { ActivityKind, Platform } from "@/discord/activity";
-
-export type Glyph = {
-  readonly viewBox: string;
-  readonly path: string;
-};
+import type { Glyph } from "../primitives";
 
 export const KIND_GLYPHS: Readonly<Record<ActivityKind, Glyph>> = {
   spotify: {

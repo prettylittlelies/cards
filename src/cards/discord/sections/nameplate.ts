@@ -1,7 +1,8 @@
 import { fragment, h, hex, mix, type Markup } from "@/render";
-import { ROW, type Context } from "../context";
-import { colorGrade, gradeFilter } from "../grade";
-import { image } from "./primitives";
+import { colorGrade, gradeFilter } from "../../grade";
+import { image } from "../../primitives";
+import { ROW } from "../../row";
+import { DISCORD_ROW, type Context } from "../context";
 
 const TINT_ACCENT_SHARE = 0.8;
 const MASK_FLOOR = 0.3;
@@ -12,7 +13,7 @@ export const nameplate = ({ config, model }: Context): Markup | null => {
   if (!plate) return null;
   const width = config.width;
   const tint = hex(mix(plate.color, model.accent, TINT_ACCENT_SHARE));
-  const mediaWidth = Math.min(width, ROW.height * ROW.nameplateAspect);
+  const mediaWidth = Math.min(width, ROW.height * DISCORD_ROW.nameplateAspect);
   const mediaX = width - mediaWidth;
   const rampStart = mediaX + mediaWidth / 2;
   const filter = gradeFilter(colorGrade(plate.color, model.accent));

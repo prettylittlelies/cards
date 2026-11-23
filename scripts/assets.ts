@@ -1,4 +1,4 @@
-import { drawCard } from "@/cards/discord/card";
+import { discordCard } from "@/cards/discord/card";
 import { DiscordCard } from "@/cards/discord/schema";
 import { coerce } from "@/proto";
 import { fontFace, h, render } from "@/render";
@@ -9,7 +9,7 @@ const BANNER = { width: 1280, height: 320 } as const;
 const CARD_SCALE = 2;
 
 const config = coerce(DiscordCard, { user: USER, font: "poppins", scale: CARD_SCALE });
-const { svg: card } = await drawCard(config);
+const { svg: card } = await discordCard.draw(config);
 await Bun.write(`${OUT}/example.svg`, card);
 
 const cardWidth = config.width * CARD_SCALE;

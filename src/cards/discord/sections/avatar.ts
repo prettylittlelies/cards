@@ -1,10 +1,8 @@
 import { fragment, h, type Markup } from "@/render";
 import type { DiscordStatus } from "@/discord/types";
-import { ROW, STATUS_FILL, type Context } from "../context";
-import { image } from "./primitives";
-
-export const AVATAR_X = ROW.inset;
-export const AVATAR_Y = (ROW.height - ROW.avatar) / 2;
+import { image } from "../../primitives";
+import { AVATAR_X, AVATAR_Y, ROW } from "../../row";
+import { DISCORD_ROW, STATUS_FILL, type Context } from "../context";
 
 const statusShape = (status: DiscordStatus, cx: number, cy: number): Markup =>
   fragment(
@@ -22,7 +20,7 @@ export const avatar = ({ config, model }: Context): Markup | null => {
   const sx = x + ROW.statusCenter;
   const sy = y + ROW.statusCenter;
   const cut = config.show.status;
-  const decoration = ROW.avatar * ROW.decorationRatio;
+  const decoration = ROW.avatar * DISCORD_ROW.decorationRatio;
   const overhang = (decoration - ROW.avatar) / 2;
 
   return fragment(
